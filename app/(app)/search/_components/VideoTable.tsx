@@ -43,7 +43,7 @@ type SortDir = "asc" | "desc";
 
 // 各列の幅 (Tailwind 用)
 const COLUMN_WIDTH: Record<VideoColumnId, string> = {
-  thumbnail: "w-[80px]",
+  thumbnail: "w-[240px]",
   title: "",
   publishedAt: "w-[100px]",
   duration: "w-[80px]",
@@ -136,7 +136,7 @@ export function VideoTable({
 
   return (
     <div className="space-y-3">
-      <div className="overflow-hidden rounded-lg border border-zinc-800">
+      <div className="overflow-x-auto rounded-lg border border-zinc-800">
         <Table>
           <TableHeader>
             <TableRow className="border-zinc-800 hover:bg-transparent">
@@ -225,24 +225,38 @@ export function VideoTable({
               >
                 {show("thumbnail") && (
                   <TableCell>
-                    {v.thumbnailUrl ? (
-                      <Image
-                        src={v.thumbnailUrl}
-                        alt={v.title}
-                        width={80}
-                        height={45}
-                        className="h-[45px] w-20 rounded object-cover"
-                      />
-                    ) : (
-                      <div className="h-[45px] w-20 rounded bg-zinc-800" />
-                    )}
+                    <a
+                      href={`https://www.youtube.com/watch?v=${v.videoId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block transition-opacity hover:opacity-80"
+                      aria-label={`${v.title} を YouTube で開く`}
+                    >
+                      {v.thumbnailUrl ? (
+                        <Image
+                          src={v.thumbnailUrl}
+                          alt={v.title}
+                          width={240}
+                          height={135}
+                          className="h-[135px] w-[240px] rounded object-cover"
+                        />
+                      ) : (
+                        <div className="h-[135px] w-[240px] rounded bg-zinc-800" />
+                      )}
+                    </a>
                   </TableCell>
                 )}
                 {show("title") && (
                   <TableCell className="max-w-md">
-                    <p className="line-clamp-2 text-sm" title={v.title}>
+                    <a
+                      href={`https://www.youtube.com/watch?v=${v.videoId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="line-clamp-2 text-sm text-foreground transition-colors hover:text-lime-400 hover:underline"
+                      title={v.title}
+                    >
                       {v.title}
-                    </p>
+                    </a>
                   </TableCell>
                 )}
                 {show("publishedAt") && (

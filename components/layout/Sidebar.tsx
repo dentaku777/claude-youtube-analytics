@@ -26,14 +26,14 @@ import {
 import { signOutAction } from "@/app/_actions/auth";
 
 const navItems = [
-  { href: "/search", label: "Search", icon: Search },
-  { href: "/compare", label: "Compare", icon: ArrowLeftRight },
-  { href: "/watchlist", label: "Watchlist", icon: Star },
-  { href: "/insights", label: "Insights", icon: BarChart3 },
-  { href: "/keywords", label: "Keywords", icon: Globe },
-  { href: "/discover", label: "Discover", icon: Compass },
-  { href: "/history", label: "History", icon: History },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/search", label: "検索", icon: Search },
+  { href: "/compare", label: "比較", icon: ArrowLeftRight },
+  { href: "/watchlist", label: "ウォッチリスト", icon: Star },
+  { href: "/insights", label: "インサイト", icon: BarChart3 },
+  { href: "/keywords", label: "キーワード", icon: Globe },
+  { href: "/discover", label: "競合発見", icon: Compass },
+  { href: "/history", label: "履歴", icon: History },
+  { href: "/settings", label: "設定", icon: Settings },
 ] as const;
 
 export interface SidebarUser {
