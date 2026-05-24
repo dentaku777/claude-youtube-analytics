@@ -17,6 +17,7 @@ import {
   buildMonthlyTrend,
   type MonthlyTrendPoint,
 } from "@/lib/youtube/kpi/trend";
+import { recordQuota } from "@/lib/youtube/quota-tracker";
 import { YouTubeApiError } from "@/lib/youtube/errors";
 import type { ChannelMeta } from "@/lib/youtube/types";
 
@@ -104,6 +105,9 @@ export async function analyzeChannel(
 
     // 7) 推移グラフ用 (常に過去 12 ヶ月)
     const trend = buildMonthlyTrend(data.videos, 12);
+
+    // 8) Quota 消費を記録 (成功時のみ)
+    await recordQuota(user.id, data.quotaSpent);
 
     return {
       ok: true,

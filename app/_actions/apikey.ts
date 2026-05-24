@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/session";
 import { encrypt, decrypt } from "@/lib/crypto/aes-gcm";
 import { testYouTubeApiKey } from "@/lib/youtube/test-key";
+import { recordQuota } from "@/lib/youtube/quota-tracker";
+import { QUOTA_COST } from "@/lib/youtube/quota-cost";
 
 export interface ApiKeyResult {
   ok: boolean;
@@ -65,6 +67,7 @@ export async function saveApiKey(input: unknown): Promise<ApiKeyResult> {
       return { ok: false, message: `疎通テスト失敗: ${test.message}` };
     }
     verified = true;
+    await recordQuota(user.id, QUOTA_COST.CHANNELS_LIST);
   } else {
     // AI 系は MVP では疎通テストをスキップ (F-KEY-13/15)。
     verified = false;
@@ -145,6 +148,7 @@ export async function testApiKey(input: unknown): Promise<ApiKeyResult> {
       where: { userId_provider: { userId: user.id, provider } },
       data: { lastVerifiedAt: new Date() },
     });
+    await recordQuota(user.id, QUOTA_COST.CHANNELS_LIST);
     revalidatePath("/settings");
     return { ok: true, verified: true, message: "疎通成功" };
   }
