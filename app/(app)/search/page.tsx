@@ -9,6 +9,7 @@ import { getUserPreference } from "@/lib/preference/get";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { KeyMissingPanel } from "@/components/empty-state/KeyMissingPanel";
 import { PlaceholderPanel } from "@/components/empty-state/PlaceholderPanel";
+import { ExportButtons } from "@/components/export/ExportButtons";
 import { SearchForm } from "./_components/SearchForm";
 import { ChannelHeader } from "./_components/ChannelHeader";
 import { VideoTable } from "./_components/VideoTable";
@@ -116,6 +117,19 @@ export default async function SearchPage({
             data={result.trend}
             granularity={result.trendGranularity}
             title={`過去 ${periodLabel(period)}`}
+          />
+
+          <ExportButtons
+            query={{
+              type: "search",
+              input,
+              period,
+              videoType,
+            }}
+            tsvRows={result.videos.map((v) => ({
+              ...v,
+              channelTitle: result.channelMeta.title,
+            }))}
           />
 
           <VideoTable
