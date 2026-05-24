@@ -12,8 +12,7 @@ import { fetchChannelData } from "@/lib/youtube/api/fetcher";
 import { recordQuota } from "@/lib/youtube/quota/tracker";
 import { YouTubeApiError } from "@/lib/youtube/api/errors";
 import { setAnalysisCache } from "@/lib/cache/analysis-cache";
-
-export const MAX_WATCHLIST_CHANNELS = 30;
+import { MAX_WATCHLIST_CHANNELS } from "@/lib/watchlist/constants";
 
 export interface WatchlistResult {
   ok: boolean;

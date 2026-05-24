@@ -14,7 +14,7 @@ import { AddChannelForm } from "./_components/AddChannelForm";
 import { BulkRefreshButton } from "./_components/BulkRefreshButton";
 import { WatchlistView } from "./_components/WatchlistView";
 import type { WatchlistRow } from "./_components/WatchlistTable";
-import { MAX_WATCHLIST_CHANNELS } from "@/app/_actions/watchlist";
+import { MAX_WATCHLIST_CHANNELS } from "@/lib/watchlist/constants";
 
 export const metadata: Metadata = { title: "Watchlist" };
 
