@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,10 +30,9 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export function SignupForm() {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(
-    null,
-  );
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -40,16 +40,20 @@ export function SignupForm() {
   });
 
   function onSubmit(values: FormValues) {
-    setResult(null);
+    setServerError(null);
     startTransition(async () => {
       const r = await signUp(values);
-      setResult({ ok: r.ok, message: r.message ?? "" });
+      if (r.ok) {
+        const params = new URLSearchParams({ email: values.email });
+        router.push(`/signup/sent?${params.toString()}`);
+        return;
+      }
       if (r.fieldErrors) {
         for (const [field, message] of Object.entries(r.fieldErrors)) {
           form.setError(field as keyof FormValues, { message });
         }
       }
-      if (r.ok) form.reset();
+      setServerError(r.message ?? "登録処理に失敗しました");
     });
   }
 
@@ -100,9 +104,9 @@ export function SignupForm() {
           )}
         />
 
-        {result && (
-          <Alert variant={result.ok ? "default" : "destructive"}>
-            <AlertDescription>{result.message}</AlertDescription>
+        {serverError && (
+          <Alert variant="destructive">
+            <AlertDescription>{serverError}</AlertDescription>
           </Alert>
         )}
 
