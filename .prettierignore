@@ -1,0 +1,11 @@
+.next/
+node_modules/
+99.reference/
+tools/wbs/
+prisma/migrations/
+*.lock
+package-lock.json
+*.xlsx
+*.pdf
+*.png
+*.jpg
