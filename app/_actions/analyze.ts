@@ -11,6 +11,8 @@ import {
   type Period,
   periodToCutoffDate,
 } from "@/lib/youtube/api/fetcher";
+import { prisma } from "@/lib/prisma";
+import { SearchType, type Prisma } from "@prisma/client";
 import { enrichVideosWithKpi, type VideoWithKpi } from "@/lib/youtube/kpi/video";
 import { calcChannelKpi, type ChannelKpi } from "@/lib/youtube/kpi/channel";
 import {
@@ -117,6 +119,30 @@ export async function analyzeChannel(
 
     // 8) Quota 消費を記録 (成功時のみ)
     await recordQuota(user.id, data.quotaSpent);
+
+    // 9) 履歴保存
+    await prisma.searchHistory.create({
+      data: {
+        userId: user.id,
+        type: SearchType.SEARCH,
+        channels: [
+          {
+            channelId: data.meta.channelId,
+            title: data.meta.title,
+            handle: data.meta.handle,
+          },
+        ] as unknown as Prisma.InputJsonValue,
+        period: input.period,
+        filters: {
+          videoType: input.videoType ?? "all",
+          hitThreshold: input.hitThreshold,
+        } as unknown as Prisma.InputJsonValue,
+        resultMeta: {
+          videoCount: enriched.length,
+          quotaSpent: data.quotaSpent,
+        } as unknown as Prisma.InputJsonValue,
+      },
+    });
 
     return {
       ok: true,

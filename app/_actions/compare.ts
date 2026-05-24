@@ -1,5 +1,8 @@
 "use server";
 
+import { SearchType, type Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { requireUser } from "@/lib/auth/session";
 import { analyzeChannel, type AnalyzeResult } from "@/app/_actions/analyze";
 import type { Period } from "@/lib/youtube/api/fetcher";
 import type { VideoTypeFilter } from "@/app/_actions/analyze";
@@ -32,6 +35,7 @@ export async function compareChannels(
     return { results: [], totalQuotaSpent: 0 };
   }
 
+  const user = await requireUser();
   const results = await Promise.all(
     inputs.map((s) =>
       analyzeChannel({
@@ -47,6 +51,36 @@ export async function compareChannels(
     (sum, r) => sum + (r.ok ? r.quotaSpent : 0),
     0,
   );
+
+  // 比較全体の履歴を 1 件記録 (個別 analyzeChannel が SEARCH 履歴を 3 件作っているが
+  // それとは別に COMPARE スコープで残す)
+  if (results.some((r) => r.ok)) {
+    const channelInfo = results
+      .map((r, i) =>
+        r.ok
+          ? {
+              input: inputs[i],
+              channelId: r.channelMeta.channelId,
+              title: r.channelMeta.title,
+            }
+          : { input: inputs[i], error: r.code },
+      );
+    await prisma.searchHistory.create({
+      data: {
+        userId: user.id,
+        type: SearchType.COMPARE,
+        channels: channelInfo as unknown as Prisma.InputJsonValue,
+        period: input.period,
+        filters: {
+          videoType: input.videoType ?? "all",
+        } as unknown as Prisma.InputJsonValue,
+        resultMeta: {
+          totalQuotaSpent,
+          successCount: results.filter((r) => r.ok).length,
+        } as unknown as Prisma.InputJsonValue,
+      },
+    });
+  }
 
   return { results, totalQuotaSpent };
 }

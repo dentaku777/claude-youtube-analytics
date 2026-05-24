@@ -1,6 +1,7 @@
 "use server";
 
-import { ApiProvider } from "@prisma/client";
+import { ApiProvider, SearchType, type Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/session";
 import { getApiKey } from "@/lib/api-keys/vault";
 import { createYouTubeClient } from "@/lib/youtube/api/client";
@@ -159,6 +160,26 @@ export async function discoverRelatedChannels(
       .sort((a, b) => b.score - a.score);
 
     await recordQuota(user.id, quotaSpent);
+
+    await prisma.searchHistory.create({
+      data: {
+        userId: user.id,
+        type: SearchType.DISCOVER,
+        channels: [
+          {
+            channelId: seedData.meta.channelId,
+            title: seedData.meta.title,
+          },
+        ] as unknown as Prisma.InputJsonValue,
+        filters: {
+          seedKeywords,
+        } as unknown as Prisma.InputJsonValue,
+        resultMeta: {
+          candidateCount: candidates.length,
+          quotaSpent,
+        } as unknown as Prisma.InputJsonValue,
+      },
+    });
 
     return {
       ok: true,
