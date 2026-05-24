@@ -7,6 +7,7 @@ import {
   formatPercent,
   formatDate,
 } from "@/lib/format";
+import { AddToWatchlistButton } from "@/components/watchlist/AddToWatchlistButton";
 
 export function ChannelHeader({
   meta,
@@ -43,6 +44,10 @@ export function ChannelHeader({
             開設: {formatDate(meta.publishedAt)}
           </p>
         </div>
+        <AddToWatchlistButton
+          channelInput={meta.channelId}
+          channelTitle={meta.title}
+        />
       </div>
 
       {/* KPI グリッド */}
