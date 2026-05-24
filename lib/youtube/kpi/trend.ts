@@ -1,49 +1,79 @@
 import type { VideoEntry } from "../types";
 
 /**
- * 月別投稿頻度と月別総再生数を集計する (要件 §3.4)。
- *
- * 戻り値は新しい月が末尾になる順 (古→新)。
- * 過去 12 ヶ月分を埋める (該当月に動画がなくても 0 で穴埋め)。
+ * 推移グラフのバケット粒度。
+ * - "day"   : YYYY-MM-DD (1w / 1m など短期間)
+ * - "month" : YYYY-MM    (3m 以上 / all)
  */
-export interface MonthlyTrendPoint {
-  yearMonth: string; // "YYYY-MM"
+export type TrendGranularity = "day" | "month";
+
+export interface TrendPoint {
+  /** "YYYY-MM-DD" (granularity=day) または "YYYY-MM" (granularity=month) */
+  bucket: string;
   postCount: number;
   totalViews: number;
 }
 
-export function buildMonthlyTrend(
+function pad(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+// バケット境界は UTC で統一する。
+// 本番 (Vercel) は UTC、ローカル (JST) はズレるため UTC 固定で挙動を一致させる。
+function monthKey(d: Date): string {
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}`;
+}
+
+function dayKey(d: Date): string {
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+}
+
+/**
+ * 動画群を指定粒度・バケット数で集計する (要件 §3.4)。
+ * 戻り値は古→新の順 (末尾が最新バケット)。
+ * 動画がないバケットも 0 で穴埋め。
+ */
+export function buildTrend(
   videos: VideoEntry[],
-  monthsBack = 12,
+  granularity: TrendGranularity,
+  bucketsBack: number,
   now: Date = new Date(),
-): MonthlyTrendPoint[] {
-  // 月キーをYYYY-MM形式で生成
-  const months: string[] = [];
-  for (let i = monthsBack - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    months.push(`${yyyy}-${mm}`);
+): TrendPoint[] {
+  const buckets: string[] = [];
+  for (let i = bucketsBack - 1; i >= 0; i--) {
+    if (granularity === "month") {
+      const d = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1),
+      );
+      buckets.push(monthKey(d));
+    } else {
+      const d = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate() - i,
+        ),
+      );
+      buckets.push(dayKey(d));
+    }
   }
 
-  // 集計バケット初期化
-  const buckets = new Map<string, { count: number; views: number }>(
-    months.map((m) => [m, { count: 0, views: 0 }]),
+  const map = new Map<string, { count: number; views: number }>(
+    buckets.map((b) => [b, { count: 0, views: 0 }]),
   );
 
-  // 動画を月キーで集約
   for (const v of videos) {
-    const d = v.publishedAt;
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const bucket = buckets.get(key);
+    const key =
+      granularity === "month" ? monthKey(v.publishedAt) : dayKey(v.publishedAt);
+    const bucket = map.get(key);
     if (bucket) {
       bucket.count++;
       bucket.views += v.viewCount;
     }
   }
 
-  return months.map((m) => {
-    const b = buckets.get(m)!;
-    return { yearMonth: m, postCount: b.count, totalViews: b.views };
+  return buckets.map((b) => {
+    const x = map.get(b)!;
+    return { bucket: b, postCount: x.count, totalViews: x.views };
   });
 }

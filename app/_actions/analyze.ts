@@ -14,8 +14,9 @@ import {
 import { enrichVideosWithKpi, type VideoWithKpi } from "@/lib/youtube/kpi/video";
 import { calcChannelKpi, type ChannelKpi } from "@/lib/youtube/kpi/channel";
 import {
-  buildMonthlyTrend,
-  type MonthlyTrendPoint,
+  buildTrend,
+  type TrendGranularity,
+  type TrendPoint,
 } from "@/lib/youtube/kpi/trend";
 import { recordQuota } from "@/lib/youtube/quota/tracker";
 import { YouTubeApiError } from "@/lib/youtube/api/errors";
@@ -28,7 +29,8 @@ export interface AnalyzeOk {
   channelMeta: ChannelMeta;
   videos: VideoWithKpi[];
   channelKpi: ChannelKpi;
-  trend: MonthlyTrendPoint[];
+  trend: TrendPoint[];
+  trendGranularity: TrendGranularity;
   quotaSpent: number;
 }
 
@@ -109,8 +111,9 @@ export async function analyzeChannel(
       : null;
     const channelKpi = calcChannelKpi(data.meta, enriched, periodDays);
 
-    // 7) 推移グラフ用 (常に過去 12 ヶ月)
-    const trend = buildMonthlyTrend(data.videos, 12);
+    // 7) 推移グラフ (期間に合わせて粒度・バケット数を変える)
+    const { granularity, buckets } = trendConfigFor(input.period, data.videos);
+    const trend = buildTrend(data.videos, granularity, buckets);
 
     // 8) Quota 消費を記録 (成功時のみ)
     await recordQuota(user.id, data.quotaSpent);
@@ -121,6 +124,7 @@ export async function analyzeChannel(
       videos: enriched,
       channelKpi,
       trend,
+      trendGranularity: granularity,
       quotaSpent: data.quotaSpent,
     };
   } catch (e) {
@@ -133,5 +137,48 @@ export async function analyzeChannel(
       code: "UNKNOWN",
       message: e instanceof Error ? e.message : "予期しないエラーが発生しました",
     };
+  }
+}
+
+/**
+ * 期間プリセットから推移グラフの粒度とバケット数を決定する。
+ * - 1w / 1m: 日次 (バケット数 7 / 30)
+ * - 3m / 6m / 1y / 3y / 6y: 月次 (期間月数)
+ * - all: 月次 (取得済み最古動画から現在までの月数、最小 12)
+ */
+function trendConfigFor(
+  period: Period,
+  videos: { publishedAt: Date }[],
+  now: Date = new Date(),
+): { granularity: TrendGranularity; buckets: number } {
+  switch (period) {
+    case "1w":
+      return { granularity: "day", buckets: 7 };
+    case "1m":
+      return { granularity: "day", buckets: 30 };
+    case "3m":
+      return { granularity: "month", buckets: 3 };
+    case "6m":
+      return { granularity: "month", buckets: 6 };
+    case "1y":
+      return { granularity: "month", buckets: 12 };
+    case "3y":
+      return { granularity: "month", buckets: 36 };
+    case "6y":
+      return { granularity: "month", buckets: 72 };
+    case "all": {
+      if (videos.length === 0) {
+        return { granularity: "month", buckets: 12 };
+      }
+      const earliest = videos.reduce(
+        (acc, v) => (v.publishedAt < acc ? v.publishedAt : acc),
+        videos[0].publishedAt,
+      );
+      const months =
+        (now.getFullYear() - earliest.getFullYear()) * 12 +
+        (now.getMonth() - earliest.getMonth()) +
+        1;
+      return { granularity: "month", buckets: Math.max(12, months) };
+    }
   }
 }

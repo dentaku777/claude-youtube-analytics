@@ -135,4 +135,6 @@ export interface VideoEntry {
   likeCount: number | null;
   commentCount: number | null;
   thumbnailUrl?: string;
+  /** タイトル + 説明文から抽出した #hashtag (重複排除済み、出現順) */
+  hashtags: string[];
 }

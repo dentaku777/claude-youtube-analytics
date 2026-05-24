@@ -201,6 +201,7 @@ export async function fetchVideoDetails(
           snippet.thumbnails?.high?.url ??
           snippet.thumbnails?.medium?.url ??
           snippet.thumbnails?.default?.url,
+        hashtags: extractHashtags(snippet.title, snippet.description),
       });
     }
   }
@@ -266,4 +267,27 @@ function parseIntOrZero(s: string | undefined | null): number {
   if (!s) return 0;
   const n = parseInt(s, 10);
   return Number.isFinite(n) ? n : 0;
+}
+
+const HASHTAG_REGEX = /#[\p{L}\p{N}_]+/gu;
+
+/**
+ * タイトル + 説明文から #hashtag を抽出する (Unicode 対応、重複排除、出現順)。
+ * YouTube は description 先頭の #tag を動画上部に表示するため、両方を対象とする。
+ */
+export function extractHashtags(
+  title: string | undefined,
+  description: string | undefined,
+): string[] {
+  const text = `${title ?? ""}\n${description ?? ""}`;
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const m of text.matchAll(HASHTAG_REGEX)) {
+    const tag = m[0];
+    if (!seen.has(tag)) {
+      seen.add(tag);
+      result.push(tag);
+    }
+  }
+  return result;
 }

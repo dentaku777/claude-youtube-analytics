@@ -11,15 +11,26 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { MonthlyTrendPoint } from "@/lib/youtube/kpi/trend";
+import type { TrendGranularity, TrendPoint } from "@/lib/youtube/kpi/trend";
 import { compactNumber } from "@/lib/format";
 
-export function TrendChart({ data }: { data: MonthlyTrendPoint[] }) {
+export interface TrendChartProps {
+  data: TrendPoint[];
+  granularity: TrendGranularity;
+  /** ヘッダー表示用 (例: "過去 3 ヶ月", "過去 7 日") */
+  title: string;
+}
+
+export function TrendChart({ data, granularity, title }: TrendChartProps) {
+  // 日次は MM-DD、月次は MM のみ表示 (X 軸が混雑するのを避ける)
+  const tickFormat = (v: string) =>
+    granularity === "month" ? v.slice(5) /* MM */ : v.slice(5) /* MM-DD */;
+
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-4">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground">
-          過去 12 ヶ月の推移
+          {title}の推移
         </h3>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
@@ -41,10 +52,11 @@ export function TrendChart({ data }: { data: MonthlyTrendPoint[] }) {
           >
             <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
             <XAxis
-              dataKey="yearMonth"
+              dataKey="bucket"
               stroke="#71717a"
               tick={{ fontSize: 11, fontFamily: "monospace" }}
-              tickFormatter={(v: string) => v.slice(5) /* MM */}
+              tickFormatter={tickFormat}
+              minTickGap={granularity === "day" ? 16 : 4}
             />
             <YAxis
               yAxisId="left"

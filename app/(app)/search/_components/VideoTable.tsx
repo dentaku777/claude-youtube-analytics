@@ -257,6 +257,24 @@ export function VideoTable({
                     >
                       {v.title}
                     </a>
+                    {v.hashtags.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5">
+                        {v.hashtags.slice(0, 5).map((tag) => (
+                          <span
+                            key={tag}
+                            className="text-xs text-cyan-400/80"
+                            title={tag}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {v.hashtags.length > 5 && (
+                          <span className="text-xs text-muted-foreground">
+                            +{v.hashtags.length - 5}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </TableCell>
                 )}
                 {show("publishedAt") && (

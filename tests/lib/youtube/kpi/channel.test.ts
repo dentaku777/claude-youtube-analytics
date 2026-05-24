@@ -28,6 +28,7 @@ function makeVideo(views: number, daysAgo = 1): VideoEntry {
     viewCount: views,
     likeCount: null,
     commentCount: null,
+    hashtags: [],
   };
 }
 

@@ -112,7 +112,11 @@ export default async function SearchPage({
 
           <ChannelHeader meta={result.channelMeta} kpi={result.channelKpi} />
 
-          <TrendChart data={result.trend} />
+          <TrendChart
+            data={result.trend}
+            granularity={result.trendGranularity}
+            title={`過去 ${periodLabel(period)}`}
+          />
 
           <VideoTable
             videos={result.videos}
