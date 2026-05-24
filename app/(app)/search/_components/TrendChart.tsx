@@ -98,13 +98,17 @@ export function TrendChart({ data, granularity, title }: TrendChartProps) {
             />
             <Line
               yAxisId="right"
-              type="monotone"
+              // monotone はピーク後の急降下で最後のセグメントが描画されない
+              // 既知のエッジケースがあるため linear に固定
+              type="linear"
               dataKey="totalViews"
               name="総再生数"
               stroke="#22d3ee"
               strokeWidth={2}
               dot={{ r: 3, fill: "#22d3ee" }}
               activeDot={{ r: 5 }}
+              connectNulls
+              isAnimationActive={false}
             />
           </ComposedChart>
         </ResponsiveContainer>
