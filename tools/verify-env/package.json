@@ -1,0 +1,14 @@
+{
+  "name": "verify-env",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Phase 0 終了時の接続確認用スクリプト (Neon DB / YouTube API)",
+  "scripts": {
+    "verify": "node verify.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "dotenv": "^16.4.5"
+  }
+}
