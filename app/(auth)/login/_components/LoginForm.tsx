@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { loginAction, googleLoginAction } from "../_actions";
+import { loginAction, googleLoginAction } from "@/app/_actions/login";
 
 const schema = z.object({
   email: z.string().email("有効なメールアドレスを入力してください"),

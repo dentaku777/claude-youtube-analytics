@@ -3,12 +3,21 @@
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
+import { signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
 } from "@/lib/email/resend";
+
+// ──────────────────────────────────────────────────────────
+// Sign Out
+// ──────────────────────────────────────────────────────────
+
+export async function signOutAction() {
+  await signOut({ redirectTo: "/" });
+}
 
 // ──────────────────────────────────────────────────────────
 // Sign Up

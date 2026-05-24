@@ -2,23 +2,23 @@
 
 import { ApiProvider } from "@prisma/client";
 import { requireUser } from "@/lib/auth/session";
-import { getApiKey } from "@/lib/auth/api-key";
-import { createYouTubeClient } from "@/lib/youtube/client";
-import { resolveChannelId } from "@/lib/youtube/resolver";
+import { getApiKey } from "@/lib/api-keys/vault";
+import { createYouTubeClient } from "@/lib/youtube/api/client";
+import { resolveChannelId } from "@/lib/youtube/api/resolver";
 import {
   fetchChannelData,
   type FetchChannelDataResult,
   type Period,
   periodToCutoffDate,
-} from "@/lib/youtube/fetcher";
+} from "@/lib/youtube/api/fetcher";
 import { enrichVideosWithKpi, type VideoWithKpi } from "@/lib/youtube/kpi/video";
 import { calcChannelKpi, type ChannelKpi } from "@/lib/youtube/kpi/channel";
 import {
   buildMonthlyTrend,
   type MonthlyTrendPoint,
 } from "@/lib/youtube/kpi/trend";
-import { recordQuota } from "@/lib/youtube/quota-tracker";
-import { YouTubeApiError } from "@/lib/youtube/errors";
+import { recordQuota } from "@/lib/youtube/quota/tracker";
+import { YouTubeApiError } from "@/lib/youtube/api/errors";
 import type { ChannelMeta } from "@/lib/youtube/types";
 
 export type VideoTypeFilter = "all" | "shorts" | "regular";
@@ -44,6 +44,8 @@ export interface AnalyzeChannelInput {
   input: string;
   period: Period;
   videoType?: VideoTypeFilter;
+  /** 勝ち動画判定の伸び率閾値 (%)。省略時 100。 */
+  hitThreshold?: number;
 }
 
 /**
@@ -91,8 +93,12 @@ export async function analyzeChannel(
       videos = videos.filter((v) => !v.isShort);
     }
 
-    // 5) KPI 付与
-    const enriched = enrichVideosWithKpi(videos, data.meta.subscriberCount);
+    // 5) KPI 付与 (勝ち動画閾値はユーザー設定を反映)
+    const enriched = enrichVideosWithKpi(
+      videos,
+      data.meta.subscriberCount,
+      input.hitThreshold ?? 100,
+    );
 
     // 6) チャンネル KPI 計算
     const cutoff = periodToCutoffDate(input.period);

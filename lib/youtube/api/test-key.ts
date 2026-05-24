@@ -1,6 +1,6 @@
 import { createYouTubeClient } from "./client";
 import { YouTubeApiError } from "./errors";
-import type { YTChannelListResponse } from "./types";
+import type { YTChannelListResponse } from "../types";
 
 /**
  * YouTube API キーの疎通テスト (要件 F-KEY-02)。

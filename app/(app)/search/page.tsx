@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { Search } from "lucide-react";
 import { ApiProvider } from "@prisma/client";
 import { requireUser } from "@/lib/auth/session";
-import { hasApiKey } from "@/lib/auth/api-key";
+import { hasApiKey } from "@/lib/api-keys/vault";
 import { analyzeChannel, type VideoTypeFilter } from "@/app/_actions/analyze";
-import type { Period } from "@/lib/youtube/fetcher";
+import type { Period } from "@/lib/youtube/api/fetcher";
+import { getUserPreference } from "@/lib/preference/get";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { KeyMissingPanel } from "@/components/layout/KeyMissingPanel";
-import { PlaceholderPanel } from "@/components/layout/PlaceholderPanel";
+import { KeyMissingPanel } from "@/components/empty-state/KeyMissingPanel";
+import { PlaceholderPanel } from "@/components/empty-state/PlaceholderPanel";
 import { SearchForm } from "./_components/SearchForm";
 import { ChannelHeader } from "./_components/ChannelHeader";
 import { VideoTable } from "./_components/VideoTable";
@@ -44,6 +45,9 @@ export default async function SearchPage({
     return <KeyMissingPanel pageLabel="単一チャンネル分析" />;
   }
 
+  // 表示設定 (列・件数・勝ち動画閾値)
+  const preference = await getUserPreference(user.id);
+
   // 2) 入力なしならフォームのみ表示
   if (!input) {
     return (
@@ -66,7 +70,12 @@ export default async function SearchPage({
   }
 
   // 3) 分析実行 (Server Component で直接 await)
-  const result = await analyzeChannel({ input, period, videoType });
+  const result = await analyzeChannel({
+    input,
+    period,
+    videoType,
+    hitThreshold: preference.hitThreshold,
+  });
 
   return (
     <div className="space-y-6">
@@ -105,7 +114,11 @@ export default async function SearchPage({
 
           <TrendChart data={result.trend} />
 
-          <VideoTable videos={result.videos} />
+          <VideoTable
+            videos={result.videos}
+            visibleColumns={preference.visibleColumns}
+            pageSize={preference.pageSize}
+          />
         </>
       )}
     </div>

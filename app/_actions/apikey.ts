@@ -6,9 +6,9 @@ import { ApiProvider } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/session";
 import { encrypt, decrypt } from "@/lib/crypto/aes-gcm";
-import { testYouTubeApiKey } from "@/lib/youtube/test-key";
-import { recordQuota } from "@/lib/youtube/quota-tracker";
-import { QUOTA_COST } from "@/lib/youtube/quota-cost";
+import { testYouTubeApiKey } from "@/lib/youtube/api/test-key";
+import { recordQuota } from "@/lib/youtube/quota/tracker";
+import { QUOTA_COST } from "@/lib/youtube/quota/cost";
 
 export interface ApiKeyResult {
   ok: boolean;

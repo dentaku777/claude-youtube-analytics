@@ -1,10 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { auth } from "@/auth";
-import { getDailyQuota } from "@/lib/youtube/quota-tracker";
+import { getDailyQuota } from "@/lib/youtube/quota/tracker";
 import {
   DAILY_QUOTA_LIMIT,
   QUOTA_WARNING_THRESHOLD,
-} from "@/lib/youtube/quota-cost";
+} from "@/lib/youtube/quota/cost";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 

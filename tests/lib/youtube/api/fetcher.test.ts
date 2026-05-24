@@ -5,9 +5,9 @@ import {
   fetchVideoDetails,
   fetchChannelData,
   periodToCutoffDate,
-} from "@/lib/youtube/fetcher";
-import type { YouTubeClient } from "@/lib/youtube/client";
-import { YouTubeApiError } from "@/lib/youtube/errors";
+} from "@/lib/youtube/api/fetcher";
+import type { YouTubeClient } from "@/lib/youtube/api/client";
+import { YouTubeApiError } from "@/lib/youtube/api/errors";
 
 function mockClient(responseQueue: unknown[]): YouTubeClient {
   const queue = [...responseQueue];

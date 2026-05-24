@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { resolveChannelId } from "@/lib/youtube/resolver";
-import type { YouTubeClient } from "@/lib/youtube/client";
-import { YouTubeApiError } from "@/lib/youtube/errors";
+import { resolveChannelId } from "@/lib/youtube/api/resolver";
+import type { YouTubeClient } from "@/lib/youtube/api/client";
+import { YouTubeApiError } from "@/lib/youtube/api/errors";
 
 function mockClient(
   response: unknown,

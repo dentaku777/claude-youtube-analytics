@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { DAILY_QUOTA_LIMIT } from "./quota-cost";
+import { DAILY_QUOTA_LIMIT } from "./cost";
 
 /**
  * YouTube API Quota の「日付キー」を返す。

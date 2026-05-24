@@ -23,7 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOutAction } from "@/app/(app)/_actions";
+import { signOutAction } from "@/app/_actions/auth";
 
 const navItems = [
   { href: "/search", label: "Search", icon: Search },

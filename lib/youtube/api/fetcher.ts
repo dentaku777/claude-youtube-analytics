@@ -1,14 +1,14 @@
 import type { YouTubeClient } from "./client";
 import { YouTubeApiError } from "./errors";
-import { QUOTA_COST } from "./quota-cost";
+import { QUOTA_COST } from "../quota/cost";
 import type {
   ChannelMeta,
   VideoEntry,
   YTChannelListResponse,
   YTPlaylistItemsResponse,
   YTVideosListResponse,
-} from "./types";
-import { isShort, parseDurationToSeconds } from "./kpi/duration";
+} from "../types";
+import { isShort, parseDurationToSeconds } from "../kpi/duration";
 
 // ─── 期間フィルタ ───
 export type Period =

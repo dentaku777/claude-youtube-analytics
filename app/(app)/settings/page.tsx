@@ -3,9 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/session";
 import { decrypt } from "@/lib/crypto/aes-gcm";
 import { maskApiKey } from "@/lib/crypto/mask";
+import { getUserPreference } from "@/lib/preference/get";
 import { YouTubeKeyCard } from "./_components/YouTubeKeyCard";
 import { AiKeyCard } from "./_components/AiKeyCard";
 import { AccountSection } from "./_components/AccountSection";
+import { PreferenceSection } from "./_components/PreferenceSection";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -20,10 +22,11 @@ const NONE: KeyState = { registered: false, masked: null, lastVerifiedAt: null }
 export default async function SettingsPage() {
   const user = await requireUser();
 
-  // ユーザーの全 API キー + アカウント情報を取得
-  const [apiKeys, userRecord] = await Promise.all([
+  // ユーザーの全 API キー + アカウント情報 + 表示設定を取得
+  const [apiKeys, userRecord, preference] = await Promise.all([
     prisma.encryptedApiKey.findMany({ where: { userId: user.id } }),
     prisma.user.findUniqueOrThrow({ where: { id: user.id } }),
+    getUserPreference(user.id),
   ]);
 
   // プロバイダ別に整形 (鍵は server-side でのみ復号 → マスク化)
@@ -91,6 +94,17 @@ export default async function SettingsPage() {
             masked={states.GOOGLE_AI?.masked ?? null}
           />
         </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          表示設定
+        </h2>
+        <PreferenceSection
+          initialVisibleColumns={preference.visibleColumns}
+          initialPageSize={preference.pageSize}
+          initialHitThreshold={preference.hitThreshold}
+        />
       </section>
 
       <section>

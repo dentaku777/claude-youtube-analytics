@@ -1,7 +1,7 @@
 import type { YouTubeClient } from "./client";
 import { YouTubeApiError } from "./errors";
-import { QUOTA_COST } from "./quota-cost";
-import type { YTChannelListResponse } from "./types";
+import { QUOTA_COST } from "../quota/cost";
+import type { YTChannelListResponse } from "../types";
 
 /**
  * 入力文字列から YouTube channelId (UC...) を解決する。

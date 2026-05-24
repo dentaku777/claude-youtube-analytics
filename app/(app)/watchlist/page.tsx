@@ -1,6 +1,6 @@
 import { Star } from "lucide-react";
 import type { Metadata } from "next";
-import { PlaceholderPanel } from "@/components/layout/PlaceholderPanel";
+import { PlaceholderPanel } from "@/components/empty-state/PlaceholderPanel";
 
 export const metadata: Metadata = { title: "Watchlist" };
 
