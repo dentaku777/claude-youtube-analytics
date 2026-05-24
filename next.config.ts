@@ -10,7 +10,13 @@ const nextConfig: NextConfig = {
     "@prisma/adapter-neon",
     "@prisma/client",
     "bcryptjs",
+    "kuromoji",
   ],
+  // kuromoji の辞書ファイル (.gz) を serverless function 用に同梱
+  outputFileTracingIncludes: {
+    "/insights": ["./node_modules/kuromoji/dict/**"],
+    "/api/insights/**": ["./node_modules/kuromoji/dict/**"],
+  },
   images: {
     remotePatterns: [
       {
