@@ -13,6 +13,7 @@
     "test": "cross-env NODE_OPTIONS=--use-system-ca vitest run",
     "test:watch": "cross-env NODE_OPTIONS=--use-system-ca vitest",
     "test:e2e": "playwright test",
+    "postinstall": "cross-env NODE_OPTIONS=--use-system-ca prisma generate",
     "prisma:generate": "cross-env NODE_OPTIONS=--use-system-ca prisma generate",
     "prisma:migrate": "cross-env NODE_OPTIONS=--use-system-ca prisma migrate dev",
     "prisma:studio": "cross-env NODE_OPTIONS=--use-system-ca prisma studio",
