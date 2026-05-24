@@ -3,18 +3,61 @@
 @tailwind utilities;
 
 @layer base {
+  /* ダーク基調 (デフォルト) — 設計書 §2.2 に準拠 */
   :root {
     color-scheme: dark;
+
+    --background: 240 10% 3.9%; /* zinc-950 #09090b */
+    --foreground: 0 0% 98%; /* zinc-50 #fafafa */
+
+    --card: 240 6% 10%; /* zinc-900 #18181b */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 6% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 84 81% 56%; /* lime-400 #a3e635 (アクセント) */
+    --primary-foreground: 240 10% 3.9%; /* primary 上は暗テキスト */
+
+    --secondary: 240 4% 16%; /* zinc-800 #27272a */
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%; /* zinc-400 #a1a1aa */
+
+    --accent: 187 95% 53%; /* cyan-400 #22d3ee (情報系) */
+    --accent-foreground: 240 10% 3.9%;
+
+    --destructive: 0 84% 60%; /* red-500 #ef4444 */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 4% 16%; /* zinc-800 */
+    --input: 240 4% 16%;
+    --ring: 84 81% 56%; /* primary と同色 */
+
+    --radius: 0.5rem;
+  }
+
+  /* ライトテーマは MVP 後検討 (F-UI-02)。今はダーク固定 */
+
+  * {
+    @apply border-border;
   }
 
   html {
-    background-color: #09090b;
-    color: #fafafa;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 
   body {
-    @apply font-sans antialiased;
-    background-color: #09090b;
-    color: #fafafa;
+    @apply bg-background font-sans text-foreground antialiased;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
+
+  /* 数値表示用ヘルパー */
+  .tabular-mono {
+    @apply font-mono tabular-nums;
   }
 }
