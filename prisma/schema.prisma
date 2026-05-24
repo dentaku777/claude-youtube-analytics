@@ -1,0 +1,233 @@
+// Youtube Analyzer — Prisma schema
+// 設計書: docs/03_basic_design.md §3.2 に準拠
+// 対象 DB: Neon PostgreSQL 17
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// Auth / User
+// ============================================================
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  emailVerified  DateTime?
+  hashedPassword String?
+  name           String?
+  image          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  apiKeys           EncryptedApiKey[]
+  preference        UserPreference?
+  watchlist         Watchlist?
+  searchHistories   SearchHistory[]
+  keywordResearches KeywordResearch[]
+  auditLogs         AuditLog[]
+
+  @@index([email])
+}
+
+// NextAuth.js standard models (@auth/prisma-adapter 期待形)
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================================
+// API Key 暗号化保存
+// ============================================================
+
+enum ApiProvider {
+  YOUTUBE
+  OPENAI
+  ANTHROPIC
+  GOOGLE_AI
+}
+
+model EncryptedApiKey {
+  id             String      @id @default(cuid())
+  userId         String
+  provider       ApiProvider
+  ciphertext     String
+  iv             String
+  authTag        String
+  lastVerifiedAt DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([userId])
+}
+
+// ============================================================
+// User Preferences
+// ============================================================
+
+model UserPreference {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  theme          String   @default("dark")
+  pageSize       Int      @default(50)
+  visibleColumns Json
+  hitThreshold   Float    @default(100.0) // 勝ち動画判定の伸び率閾値 (%)
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// ★ Watchlist (中心エンティティ)
+// ============================================================
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channels WatchlistChannel[]
+}
+
+model WatchlistChannel {
+  id             String    @id @default(cuid())
+  watchlistId    String
+  channelId      String // YouTube UC...
+  channelTitle   String // 表示用キャッシュ
+  channelHandle  String?
+  thumbnailUrl   String?
+  tags           String[] // ユーザー定義タグ
+  memo           String?   @db.Text // Markdown
+  addedAt        DateTime  @default(now())
+  lastAnalyzedAt DateTime?
+
+  watchlist Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+
+  @@unique([watchlistId, channelId])
+  @@index([watchlistId])
+}
+
+// ============================================================
+// ★ AnalysisCache (横断データ層)
+// ============================================================
+
+model AnalysisCache {
+  id          String   @id @default(cuid())
+  channelId   String // YouTube UC...
+  period      String // "1m" | "3m" | "6m" | "1y" | "all"
+  channelMeta Json // channels.list レスポンス
+  videos      Json // videos.list 配列
+  cachedAt    DateTime @default(now())
+  expiresAt   DateTime // cachedAt + 1h
+
+  @@unique([channelId, period])
+  @@index([expiresAt]) // 期限切れの一掃用
+}
+
+// ============================================================
+// 検索履歴・キーワード調査
+// ============================================================
+
+enum SearchType {
+  SEARCH
+  COMPARE
+  KEYWORD
+  DISCOVER
+}
+
+model SearchHistory {
+  id         String     @id @default(cuid())
+  userId     String
+  type       SearchType
+  channels   Json? // SEARCH/COMPARE/DISCOVER 用
+  keyword    String? // KEYWORD 用
+  period     String?
+  filters    Json?
+  resultMeta Json? // 結果サマリ (再実行不要な軽量情報)
+  createdAt  DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model KeywordResearch {
+  id           String   @id @default(cuid())
+  userId       String
+  keyword      String
+  totalViews   BigInt
+  avgViews     BigInt
+  channelCount Int
+  topChannels  Json // [{channelId, title, videoCount}]
+  histogram    Json // 伸び率分布
+  rawData      Json // 詳細データ
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+// ============================================================
+// 監査ログ
+// ============================================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  event     String // "login.success", "watchlist.add", "keyword.search", ...
+  ip        String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([event, createdAt(sort: Desc)])
+}
